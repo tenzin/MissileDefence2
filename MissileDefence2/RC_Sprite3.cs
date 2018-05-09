@@ -233,7 +233,7 @@ namespace RC_Framework
         /// <summary>
         /// these variables called varBool0, varBool1 are available for use by user code
         /// </summary>
-        public bool varBool0;
+        public bool launched;
         /// <summary>
         /// available for use by user code
         /// </summary>
