@@ -59,6 +59,32 @@
     <Compile Include="Game1.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RC_Frame.cs" />
+    <Compile Include="RC_GameState.cs" />
+    <Compile Include="RC_GUI.cs" />
+    <Compile Include="RC_GUIMenuRenderable.cs" />
+    <Compile Include="RC_LineBatch.cs" />
+    <Compile Include="RC_PanZoom.cs" />
+    <Compile Include="RC_Particle.cs" />
+    <Compile Include="RC_PositionFactory.cs" />
+    <Compile Include="RC_RenderableAttached.cs" />
+    <Compile Include="RC_RenderableBounded.cs" />
+    <Compile Include="RC_RenderableList.cs" />
+    <Compile Include="RC_RenderableMulti.cs" />
+    <Compile Include="RC_RenderableParents.cs" />
+    <Compile Include="RC_Renderables.cs" />
+    <Compile Include="RC_RenderablesUtilText.cs" />
+    <Compile Include="RC_Sound.cs" />
+    <Compile Include="RC_Sprite3.cs" />
+    <Compile Include="RC_Sprite12Step.cs" />
+    <Compile Include="RC_SpriteList.cs" />
+    <Compile Include="RC_StringList.cs" />
+    <Compile Include="RC_Surface.cs" />
+    <Compile Include="RC_Texture.cs" />
+    <Compile Include="RC_Utils2.cs" />
+    <Compile Include="RC_Utils3.cs" />
+    <Compile Include="RC_UtilText.cs" />
+    <Compile Include="RC_Waypoint.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Info.plist" />
