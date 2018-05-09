@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Microsoft.Xna.Framework.Audio;
 
 using RC_Framework;
 
@@ -48,6 +50,10 @@ namespace MissileDefence2.MacOS
         Texture2D textureThreat1;
         Texture2D textureThreat2;
         Texture2D textureThreat3;
+        Texture2D textureCity1;
+        Texture2D textureCity2;
+        Texture2D textureCity3;
+        Texture2D textureCity4;
 
         //Backgrounds
         ImageBackground splashScreenBackGround;
@@ -58,12 +64,19 @@ namespace MissileDefence2.MacOS
         Sprite3 spriteThreat1;
         Sprite3 spriteThreat2;
         Sprite3 spriteThreat3;
+        Sprite3 spriteCity1;
+        Sprite3 spriteCity2;
+        Sprite3 spriteCity3;
+        Sprite3 spriteCity4;
 
         //SpriteLists
         SpriteList threatList;
 
         //font
         SpriteFont font;
+
+        //Sounds
+        SoundEffect explosion;
 
         //Keyboard input
         KeyboardState currentKeyState;
@@ -119,6 +132,10 @@ namespace MissileDefence2.MacOS
             textureThreat1 = Content.Load<Texture2D>("Images/Threat1");
             textureThreat2 = Content.Load<Texture2D>("Images/Threat2");
             textureThreat3 = Content.Load<Texture2D>("Images/Threat3");
+            textureCity1 = Content.Load<Texture2D>("Images/City1");
+            textureCity2 = Content.Load<Texture2D>("Images/City2");
+            textureCity3 = Content.Load<Texture2D>("Images/City3");
+            textureCity4 = Content.Load<Texture2D>("Images/City4");
 
             //Create backgrounds from texture
             splashScreenBackGround = new ImageBackground(textureSplashScreen, Color.White, GraphicsDevice);
@@ -145,13 +162,25 @@ namespace MissileDefence2.MacOS
             spriteThreat3.setMoveSpeed(LEVEL1_SPEED);
             spriteThreat3.launched = false;
 
+            spriteCity1 = new Sprite3(true, textureCity1, 30, 355);
+            spriteCity1.setBBToTexture();
+            spriteCity2 = new Sprite3(true, textureCity2, 195, 355);
+            spriteCity2.setBBToTexture();
+            spriteCity3 = new Sprite3(true, textureCity3, 475, 355);
+            spriteCity3.setBBToTexture();
+            spriteCity4 = new Sprite3(true, textureCity4, 651, 355);
+            spriteCity4.setBBToTexture();
+
             //Add threat sprites to spritelist
             threatList.addSprite(spriteThreat1);
             threatList.addSprite(spriteThreat2);
             threatList.addSprite(spriteThreat3);
             
-
+            //Create font
             font = Content.Load<SpriteFont>("Fonts/Font");
+
+            //Creat sound
+            explosion = Content.Load<SoundEffect>("Sounds/Explosion");
         }
 
         /// <summary>
@@ -296,7 +325,27 @@ namespace MissileDefence2.MacOS
                 ResetMissile();
                 threatList[collision].visible = false;
                 threatList[collision].launched = false;
+                explosion.Play();
             }
+
+            //check collision with cities
+            List<Rectangle> cityBounds = new List<Rectangle>(4);
+            cityBounds.Add(spriteCity1.bounds);
+            cityBounds.Add(spriteCity2.bounds);
+            cityBounds.Add(spriteCity3.bounds);
+            cityBounds.Add(spriteCity4.bounds);
+
+            foreach (Rectangle rectangle in cityBounds)
+            {
+                collision = threatList.collisionWithRect(rectangle);
+                if (collision != -1) //collosion between city and threat
+                {
+                    threatList[collision].visible = false;
+                    threatList[collision].launched = false;
+                    explosion.Play();
+                }
+            }
+
 
         }
 
@@ -308,16 +357,23 @@ namespace MissileDefence2.MacOS
         private void DrawLevel1()
         {
             level1BackGround.Draw(spriteBatch);
-            spriteMissile.draw(spriteBatch);
+            spriteCity1.Draw(spriteBatch);
+            spriteCity2.Draw(spriteBatch);
+            spriteCity3.Draw(spriteBatch);
+            spriteCity4.Draw(spriteBatch);
+            spriteMissile.Draw(spriteBatch);
             spriteBatch.DrawString(font, "active: " + threatList.count(), new Vector2(50, 50), Color.White);
             threatList.drawAll(spriteBatch);
-
             if (showBoundingBox)
             {
                 spriteMissile.drawInfo(spriteBatch, Color.White, Color.Black);
                 spriteMissile.drawRect4(spriteBatch, Color.Red);
                 threatList.drawInfo(spriteBatch, Color.White, Color.Red);
                 threatList.drawRect4(spriteBatch, Color.Blue);
+                spriteCity1.drawInfo(spriteBatch, Color.White, Color.Red);
+                spriteCity2.drawInfo(spriteBatch, Color.White, Color.Red);
+                spriteCity3.drawInfo(spriteBatch, Color.White, Color.Red);
+                spriteCity4.drawInfo(spriteBatch, Color.White, Color.Red);
             }
 
         }
