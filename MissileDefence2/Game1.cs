@@ -21,7 +21,8 @@ namespace MissileDefence2.MacOS
         Level3,
         GameWin,
         GameLose,
-        Pause
+        Pause,
+        Instruction
     }
 
     /// <summary>
@@ -67,6 +68,7 @@ namespace MissileDefence2.MacOS
 
         //GameState
         GameState gameState;
+        GameState previousGameState;
 
         //Textures
         //Backgrounds
@@ -79,6 +81,8 @@ namespace MissileDefence2.MacOS
         Texture2D textureGameLose;
         Texture2D textureGameWin;
         Texture2D textureMissile;
+        Texture2D texturePaused;
+        Texture2D textureInstruction;
 
         // threats
         Texture2D textureThreat1;
@@ -208,6 +212,9 @@ namespace MissileDefence2.MacOS
             textureCity3 = Content.Load<Texture2D>("Images/City3");
             textureCity4 = Content.Load<Texture2D>("Images/City4");
 
+            texturePaused = Content.Load<Texture2D>("Images/Paused");
+            textureInstruction = Content.Load<Texture2D>("Images/Instruction");
+
             //Create backgrounds from texture
             splashScreenBackGround = new ImageBackground(textureSplashScreen, Color.White, GraphicsDevice);
             level1BackGround = new ImageBackground(textureLevel1BackGround, Color.White, GraphicsDevice);
@@ -290,6 +297,14 @@ namespace MissileDefence2.MacOS
                     UpdateGameLose();
                     break;
 
+                case GameState.Pause:
+                    UpdatePause();
+                    break;
+
+                case GameState.Instruction:
+                    UpdateInstruction();
+                    break;
+
 
             }
             base.Update(gameTime);
@@ -301,7 +316,7 @@ namespace MissileDefence2.MacOS
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
-            graphics.GraphicsDevice.Clear(Color.CornflowerBlue);
+            //graphics.GraphicsDevice.Clear(Color.CornflowerBlue);
 
             //TODO: Add your drawing code here
             spriteBatch.Begin();
@@ -349,6 +364,14 @@ namespace MissileDefence2.MacOS
                     DrawGameLose();
                     break;
 
+                case GameState.Pause:
+                    DrawPause();
+                    break;
+
+                case GameState.Instruction:
+                    DrawInstruction();
+                    break;
+
             }
 
             spriteBatch.End();
@@ -365,6 +388,10 @@ namespace MissileDefence2.MacOS
                 LoadGameComponents();
                 gameState = GameState.Level1;
             }
+            if (prevKeyState.IsKeyUp(Keys.F1) && currentKeyState.IsKeyDown(Keys.F1))
+            {
+                gameState = GameState.Instruction;
+            }
         }
 
         private void DrawSplashScreen()
@@ -376,6 +403,13 @@ namespace MissileDefence2.MacOS
         #region Level1
         private void UpdateLevel1(GameTime gameTime)
         {
+            //Check for pause key
+            if (prevKeyState.IsKeyUp(Keys.P) && currentKeyState.IsKeyDown(Keys.P))
+            {
+                previousGameState = gameState;
+                gameState = GameState.Pause;
+            }
+
             //Update missile
             UpdateMissile();
 
@@ -513,6 +547,12 @@ namespace MissileDefence2.MacOS
         #region Level2
         private void UpdateLevel2(GameTime gameTime)
         {
+            //Check for pause key
+            if (prevKeyState.IsKeyUp(Keys.P) && currentKeyState.IsKeyDown(Keys.P))
+            {
+                previousGameState = gameState;
+                gameState = GameState.Pause;
+            }
             //Update missile
             UpdateMissile();
 
@@ -649,6 +689,12 @@ namespace MissileDefence2.MacOS
         #region Level3
         private void UpdateLevel3(GameTime gameTime)
         {
+            //Check for pause key
+            if (prevKeyState.IsKeyUp(Keys.P) && currentKeyState.IsKeyDown(Keys.P))
+            {
+                previousGameState = gameState;
+                gameState = GameState.Pause;
+            }
             //Update missile
             UpdateMissile();
 
@@ -798,6 +844,49 @@ namespace MissileDefence2.MacOS
         }
         #endregion
 
+        #region GamePause
+        private void UpdatePause()
+        {
+            if (prevKeyState.IsKeyUp(Keys.R) && currentKeyState.IsKeyDown(Keys.R))
+            {
+                gameState = previousGameState;
+            }
+        }
+
+        private void DrawPause()
+        {
+            switch(previousGameState)
+            {
+                case GameState.Level1:
+                    DrawLevel1();
+                    break;
+
+                case GameState.Level2:
+                    DrawLevel2();
+                    break;
+
+                case GameState.Level3:
+                    DrawLevel3();
+                    break;
+            }
+            spriteBatch.Draw(texturePaused, new Vector2(GraphicsDevice.Viewport.Width / 2 - texturePaused.Width / 2, GraphicsDevice.Viewport.Height / 2 - texturePaused.Height / 2), Color.White);
+        }
+        #endregion
+
+        #region Instruction
+        private void UpdateInstruction()
+        {
+            if (prevKeyState.IsKeyUp(Keys.R) && currentKeyState.IsKeyDown(Keys.R))
+            {
+                gameState = GameState.SplashScreen;
+            }
+        }
+        private void DrawInstruction()
+        {
+            spriteBatch.Draw(textureInstruction, new Vector2(0, 0), Color.White);
+        }
+        #endregion
+
         #region Helper Utils
 
         private void UpdateMissile()
@@ -852,7 +941,7 @@ namespace MissileDefence2.MacOS
         private void DrawScore()
         {
             spriteBatch.DrawString(font, "DESTROYED CITY: " + (NO_OF_CITIES - cityList.countActive()), new Vector2(10, 30), Color.White);
-            spriteBatch.DrawString(font, "DESTROYED BOMBS: " + gameScore, new Vector2(10, 50), Color.White);
+            spriteBatch.DrawString(font, "DESTROYED THREATS: " + gameScore, new Vector2(10, 50), Color.White);
 
         }
 
