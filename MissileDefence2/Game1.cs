@@ -15,10 +15,15 @@ namespace MissileDefence2.MacOS
     {
         SplashScreen,
         Level1,
+        Level1Win,
+        Level1Lose,
         Level2,
+        Level2Win,
+        Level2Lose,
+        Level3,
+        Level3Win,
+        Level3Lose,
         Pause,
-        Lose,
-        Win,
         Credit
     }
 
@@ -31,25 +36,47 @@ namespace MissileDefence2.MacOS
         SpriteBatch spriteBatch;
 
         //Some constants
+        //Rotation info for threats and missile
         public static float MAX_ROTATION_DEGREE = (float)Math.PI / 4;
         public static float MIN_ROTATION_DEGREE = - (float)Math.PI / 4;
         public static float DELTA_ROTATION = (float)Math.PI / 90;
         public static float MISSILE_DISPLAY_ANGLE = -(float)Math.PI / 2;
         public static float THREAT_DISPLAY_ANGLE = (float)Math.PI / 2;
-        public static int LEVEL1_SPEED = 4;
-        public static int LEVEL2_SPEED = 8;
-        public static int LEVEL3_SPEED = 10;
+
+        //Number of waves for each level
+        public static int LEVEL_1_WAVE = 5;
+        public static int LEVEL_2_WAVE = 7;
+        public static int LEVEL_3_WAVE = 9;
+
+        //Threat speed for each level
+        //public static int LEVEL1_SPEED = 2;
+        public static int LEVEL2_SPEED = 5;
+        public static int LEVEL3_SPEED = 8;
+
+        //Missile Speed
+        public static int MISSILE_SPEED = 8;
+
+        //Level 1 Threat count
+        public static int LEVEL_1_THREAT_COUNT = 5;
+        public static int LEVEL_2_THREAT_COUNT = 3;
+        public static int LEVEL_3_THREAT_COUNT = 5;
 
         //GameState
         GameState gameState;
 
         //Textures
+        //Backgrounds
         Texture2D textureSplashScreen;
         Texture2D textureLevel1BackGround;
         Texture2D textureMissile;
+
+        // threats
         Texture2D textureThreat1;
         Texture2D textureThreat2;
         Texture2D textureThreat3;
+        Texture2D textureThreatBallon;
+
+        //cities
         Texture2D textureCity1;
         Texture2D textureCity2;
         Texture2D textureCity3;
@@ -61,16 +88,23 @@ namespace MissileDefence2.MacOS
 
         //Sprites
         Sprite3 spriteMissile;
+
+        //threat sprites
         Sprite3 spriteThreat1;
         Sprite3 spriteThreat2;
         Sprite3 spriteThreat3;
+        Sprite3 spriteBallon;
+
+        //Cities
         Sprite3 spriteCity1;
         Sprite3 spriteCity2;
         Sprite3 spriteCity3;
         Sprite3 spriteCity4;
 
         //SpriteLists
-        SpriteList threatList;
+        SpriteList level1ThreatList;
+        SpriteList level2ThreatList;
+        SpriteList level3ThreatList;
 
         //font
         SpriteFont font;
@@ -108,8 +142,10 @@ namespace MissileDefence2.MacOS
             gameState = GameState.SplashScreen;
             showBoundingBox = false;
             missileLaunched = false;
-            threatList = new SpriteList(6);
-            random = new Random((int)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds);
+            level1ThreatList = new SpriteList(LEVEL_1_THREAT_COUNT);
+            level2ThreatList = new SpriteList(LEVEL_2_THREAT_COUNT);
+            level3ThreatList = new SpriteList(LEVEL_3_THREAT_COUNT);
+
             base.Initialize();
         }
 
@@ -132,6 +168,7 @@ namespace MissileDefence2.MacOS
             textureThreat1 = Content.Load<Texture2D>("Images/Threat1");
             textureThreat2 = Content.Load<Texture2D>("Images/Threat2");
             textureThreat3 = Content.Load<Texture2D>("Images/Threat3");
+            textureThreatBallon = Content.Load<Texture2D>("Images/Ballon");
             textureCity1 = Content.Load<Texture2D>("Images/City1");
             textureCity2 = Content.Load<Texture2D>("Images/City2");
             textureCity3 = Content.Load<Texture2D>("Images/City3");
@@ -143,25 +180,12 @@ namespace MissileDefence2.MacOS
 
             //Create sprites from texture
             spriteMissile = new Sprite3(true, textureMissile, 380, 400);
-            //spriteMissile.setBBandHSFractionOfTexCentered(1.0f);
             spriteMissile.setHSoffset(new Vector2(textureMissile.Width / 2, textureMissile.Height / 2));
             spriteMissile.setDisplayAngleRadians(MISSILE_DISPLAY_ANGLE);
             spriteMissile.setMoveAngleRadians(spriteMissile.getDisplayAngleRadians());
-            spriteMissile.setMoveSpeed(LEVEL1_SPEED);
+            spriteMissile.setMoveSpeed(MISSILE_SPEED);
 
-            spriteThreat1 = new Sprite3(false, textureThreat1, 0, 0);
-            spriteThreat1.setHSoffset(new Vector2(textureThreat1.Width / 2, textureThreat1.Height / 2));
-            spriteThreat1.setMoveSpeed(LEVEL1_SPEED);
-            spriteThreat1.launched = false;
-            spriteThreat2 = new Sprite3(false, textureThreat2, 0, 0);
-            spriteThreat2.setHSoffset(new Vector2(textureThreat2.Width / 2, textureThreat2.Height / 2));
-            spriteThreat2.setMoveSpeed(LEVEL1_SPEED);
-            spriteThreat2.launched = false;
-            spriteThreat3 = new Sprite3(false, textureThreat3, 0, 0);
-            spriteThreat3.setHSoffset(new Vector2(textureThreat3.Width / 2, textureThreat3.Height / 2));
-            spriteThreat3.setMoveSpeed(LEVEL1_SPEED);
-            spriteThreat3.launched = false;
-
+            //City 
             spriteCity1 = new Sprite3(true, textureCity1, 30, 355);
             spriteCity1.setBBToTexture();
             spriteCity2 = new Sprite3(true, textureCity2, 195, 355);
@@ -171,10 +195,34 @@ namespace MissileDefence2.MacOS
             spriteCity4 = new Sprite3(true, textureCity4, 651, 355);
             spriteCity4.setBBToTexture();
 
-            //Add threat sprites to spritelist
-            threatList.addSprite(spriteThreat1);
-            threatList.addSprite(spriteThreat2);
-            threatList.addSprite(spriteThreat3);
+            //create threat sprites and load threatlists for all levels -- not very good but simpler to load all content in the begining
+            //Level1 threatlist
+            for (int i = 0; i < LEVEL_1_THREAT_COUNT; i++)
+            {
+                Sprite3 temp = new Sprite3(false, textureThreatBallon, 0, 0);
+                temp.launched = false;
+                temp.setHSoffset(new Vector2(0, textureThreatBallon.Height));
+                //temp.setDeltaSpeed(new Vector2(0, 1));
+                level1ThreatList.addSpriteReuse(temp);
+            }
+
+            //Level2 threatlist
+            spriteThreat1 = new Sprite3(false, textureThreat1, 0, 0);
+            spriteThreat1.setHSoffset(new Vector2(textureThreat1.Width / 2, textureThreat1.Height / 2));
+            spriteThreat1.setMoveSpeed(LEVEL2_SPEED);
+            spriteThreat1.launched = false;
+            spriteThreat2 = new Sprite3(false, textureThreat2, 0, 0);
+            spriteThreat2.setHSoffset(new Vector2(textureThreat2.Width / 2, textureThreat2.Height / 2));
+            spriteThreat2.setMoveSpeed(LEVEL2_SPEED);
+            spriteThreat2.launched = false;
+            spriteThreat3 = new Sprite3(false, textureThreat3, 0, 0);
+            spriteThreat3.setHSoffset(new Vector2(textureThreat3.Width / 2, textureThreat3.Height / 2));
+            spriteThreat3.setMoveSpeed(LEVEL2_SPEED);
+            spriteThreat3.launched = false;
+            level2ThreatList.addSprite(spriteThreat1);
+            level2ThreatList.addSprite(spriteThreat2);
+            level2ThreatList.addSprite(spriteThreat3);
+
             
             //Create font
             font = Content.Load<SpriteFont>("Fonts/Font");
@@ -197,6 +245,11 @@ namespace MissileDefence2.MacOS
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || currentKeyState.IsKeyDown(Keys.Escape))
                 Exit();
 
+            //Check for b key
+            if (prevKeyState.IsKeyUp(Keys.B) && currentKeyState.IsKeyDown(Keys.B))
+            {
+                showBoundingBox = !showBoundingBox;
+            }
             // TODO: Add your update logic here
             //Check for gameState value and call appropriate update functions
             switch (gameState)
@@ -209,6 +262,15 @@ namespace MissileDefence2.MacOS
                     UpdateLevel1();
                     break;
 
+                case GameState.Level1Win:
+                    break;
+
+                case GameState.Level2:
+                    UpdateLevel2();
+                    break;
+
+                case GameState.Level3:
+                    break;
             }
             base.Update(gameTime);
         }
@@ -231,7 +293,22 @@ namespace MissileDefence2.MacOS
                     break;
 
                 case GameState.Level1:
+                    level1BackGround.Draw(spriteBatch);
+                    spriteCity1.Draw(spriteBatch);
+                    spriteCity2.Draw(spriteBatch);
+                    spriteCity3.Draw(spriteBatch);
+                    spriteCity4.Draw(spriteBatch);
+                    spriteMissile.Draw(spriteBatch);
                     DrawLevel1();
+                    break;
+                case GameState.Level2:
+                    level1BackGround.Draw(spriteBatch);
+                    spriteCity1.Draw(spriteBatch);
+                    spriteCity2.Draw(spriteBatch);
+                    spriteCity3.Draw(spriteBatch);
+                    spriteCity4.Draw(spriteBatch);
+                    spriteMissile.Draw(spriteBatch);
+                    DrawLevel2();
                     break;
 
             }
@@ -241,6 +318,7 @@ namespace MissileDefence2.MacOS
             base.Draw(gameTime);
         }
 
+        #region Splash Screen
         private void UpdateSplashScreen()
         {
             if (currentKeyState.IsKeyDown(Keys.Enter))
@@ -249,13 +327,203 @@ namespace MissileDefence2.MacOS
             }
         }
 
+        private void DrawSplashScreen()
+        {
+            splashScreenBackGround.Draw(spriteBatch);
+        }
+        #endregion
+
+        #region Level1
         private void UpdateLevel1()
         {
-            //Check for b key
-            if (prevKeyState.IsKeyUp(Keys.B) && currentKeyState.IsKeyDown(Keys.B)) 
+            //Update missile
+            UpdateMissile();
+
+            //update threats
+            if (!ThreatLaunched(level1ThreatList)) //all threats are not active
             {
-                showBoundingBox = !showBoundingBox;
+                ResetLevel1Threats(); //reset and make them active
             }
+            else //Move threat sprites and if they get out of bounds, make them inactive
+            {
+                for (int i = 0; i < LEVEL_1_THREAT_COUNT; i++)
+                {
+                    if (level1ThreatList[i].visible == true)
+                    {
+                        level1ThreatList[i].moveByDeltaXY();
+                    }
+                    Rectangle threatAABB = level1ThreatList[i].getBoundingBoxAA();
+                    if (!threatAABB.Intersects(GraphicsDevice.Viewport.Bounds)) //threat out of view
+                    {
+                        level1ThreatList[i].launched = false;
+                        level1ThreatList[i].visible = false;
+
+                    }
+                }
+            }
+
+            //collision detection
+            //Check collision with missile
+            Rectangle missileAABB = spriteMissile.getBoundingBoxAA();
+            int collision = level1ThreatList.collisionWithRect(missileAABB);
+            if (collision != -1 && missileLaunched) //collosion between missile and threat
+            {
+                ResetMissile();
+                level1ThreatList[collision].visible = false;
+                level1ThreatList[collision].launched = false;
+                explosion.Play();
+            }
+
+            //check collision with cities
+            List<Rectangle> cityBounds = new List<Rectangle>(4);
+            cityBounds.Add(spriteCity1.bounds);
+            cityBounds.Add(spriteCity2.bounds);
+            cityBounds.Add(spriteCity3.bounds);
+            cityBounds.Add(spriteCity4.bounds);
+
+            foreach (Rectangle rectangle in cityBounds)
+            {
+                collision = level1ThreatList.collisionWithRect(rectangle);
+                if (collision != -1) //collosion between city and threat
+                {
+                    level1ThreatList[collision].visible = false;
+                    level1ThreatList[collision].launched = false;
+                    explosion.Play();
+                }
+            }
+        }
+        private void DrawLevel1()
+        {
+            level1ThreatList.drawAll(spriteBatch);
+            spriteBatch.DrawString(font, "active: " + level1ThreatList.count(), new Vector2(50, 50), Color.White);
+        }
+
+        private void ResetLevel1Threats()
+        {
+            random = new Random((int)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds);
+            for (int i = 0; i < LEVEL_1_THREAT_COUNT; i++)
+            {
+                if (level1ThreatList[i].visible == false)
+                {
+                    level1ThreatList[i].setPos(new Vector2(random.Next(20, 800 - 20), 0));
+                    level1ThreatList[i].setDeltaSpeed(new Vector2(0, 0.5f + (float)random.NextDouble()));
+                    level1ThreatList[i].visible = true;
+                    level1ThreatList[i].launched = true;
+                }
+            }
+        }
+
+        #endregion
+
+        #region Level1Win
+        private void UpdateLevel1Win()
+        {
+            if (currentKeyState.IsKeyDown(Keys.Enter))
+            {
+                gameState = GameState.Level2;
+                ResetLevel2Threats();
+            }
+        }
+        #endregion
+
+
+        #region Level2
+        private void UpdateLevel2()
+        {
+            //Update missile
+            UpdateMissile();
+
+            //update threats
+            if (!ThreatLaunched(level2ThreatList)) //all threats are not active
+            {
+                ResetLevel2Threats(); //reset and make them active
+            }
+            else 
+            {
+                for (int i = 0; i < LEVEL_2_THREAT_COUNT; i++) 
+                {
+                    if (level2ThreatList[i].visible == true)
+                    {
+                        level2ThreatList[i].moveByAngleSpeed();
+                    }
+                    Rectangle threatAABB = level2ThreatList[i].getBoundingBoxAA();
+                    if (!threatAABB.Intersects(GraphicsDevice.Viewport.Bounds)) //threat out of view
+                    {
+                        level2ThreatList[i].launched = false;
+                        level2ThreatList[i].visible = false;
+
+                    }
+                }
+            }
+            //collision detection
+            //Check collision with missile
+            Rectangle missileAABB = spriteMissile.getBoundingBoxAA();
+            int collision = level2ThreatList.collisionWithRect(missileAABB);
+            if (collision != -1 && missileLaunched) //collosion between missile and threat
+            {
+                ResetMissile();
+                level2ThreatList[collision].visible = false;
+                level2ThreatList[collision].launched = false;
+                explosion.Play();
+            }
+
+            //check collision with cities
+            List<Rectangle> cityBounds = new List<Rectangle>(4);
+            cityBounds.Add(spriteCity1.bounds);
+            cityBounds.Add(spriteCity2.bounds);
+            cityBounds.Add(spriteCity3.bounds);
+            cityBounds.Add(spriteCity4.bounds);
+
+            foreach (Rectangle rectangle in cityBounds)
+            {
+                collision = level2ThreatList.collisionWithRect(rectangle);
+                if (collision != -1) //collosion between city and threat
+                {
+                    level2ThreatList[collision].visible = false;
+                    level2ThreatList[collision].launched = false;
+                    explosion.Play();
+                }
+            }
+        }
+
+        private void DrawLevel2()
+        {
+            
+            spriteBatch.DrawString(font, "active: " + level2ThreatList.count(), new Vector2(50, 50), Color.White);
+            level2ThreatList.drawAll(spriteBatch);
+            if (showBoundingBox)
+            {
+                spriteMissile.drawInfo(spriteBatch, Color.White, Color.Black);
+                spriteMissile.drawRect4(spriteBatch, Color.Red);
+                level2ThreatList.drawInfo(spriteBatch, Color.White, Color.Red);
+                level2ThreatList.drawRect4(spriteBatch, Color.Blue);
+                spriteCity1.drawInfo(spriteBatch, Color.White, Color.Red);
+                spriteCity2.drawInfo(spriteBatch, Color.White, Color.Red);
+                spriteCity3.drawInfo(spriteBatch, Color.White, Color.Red);
+                spriteCity4.drawInfo(spriteBatch, Color.White, Color.Red);
+            }
+
+        }
+
+        public void ResetLevel2Threats()
+        {
+            random = new Random((int)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds);
+            for (int i = 0; i < LEVEL_2_THREAT_COUNT; i++)
+            {
+                if (level2ThreatList[i].visible == false)
+                {
+                    level2ThreatList[i].setPos(new Vector2(random.Next(200, 800 - 200), 0));
+                    level2ThreatList[i].setDisplayAngleRadians((float)random.NextDouble() * (float)(3 * Math.PI / 4 - Math.PI / 4) + (float)Math.PI / 4);
+                    level2ThreatList[i].setMoveAngleRadians(level2ThreatList[i].getDisplayAngleRadians());
+                    level2ThreatList[i].visible = true;
+                    level2ThreatList[i].launched = true;
+                }
+            }
+        }
+        #endregion
+
+        private void UpdateMissile()
+        {
             //Update missile
             if (currentKeyState.IsKeyDown(Keys.Right) && spriteMissile.getDisplayAngleRadians() < MAX_ROTATION_DEGREE + MISSILE_DISPLAY_ANGLE)
             {
@@ -283,102 +551,9 @@ namespace MissileDefence2.MacOS
             {
                 ResetMissile();
             }
-
-            //update threats
-            if (!ThreatLaunched())
-            {
-                random = new Random((int)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds);
-                for (int i = 0; i < threatList.count(); i++)
-                {
-                    if (threatList[i].visible == false) 
-                    {
-                        threatList[i].setPos(new Vector2(random.Next(200, 800 - 200), 0));
-                        threatList[i].setDisplayAngleRadians((float)random.NextDouble() * (float)(3 * Math.PI / 4 - Math.PI / 4) + (float)Math.PI / 4);
-                        threatList[i].setMoveAngleRadians(threatList[i].getDisplayAngleRadians());
-                        threatList[i].visible = true;
-                        threatList[i].launched = true;
-                    }
-                }
-            }
-            else 
-            {
-                for (int i = 0; i < threatList.count(); i++) 
-                {
-                    if (threatList[i].visible == true)
-                    {
-                        threatList[i].moveByAngleSpeed();
-                    }
-                    Rectangle threatAABB = threatList[i].getBoundingBoxAA();
-                    if (!threatAABB.Intersects(GraphicsDevice.Viewport.Bounds)) //threat out of view
-                    {
-                        threatList[i].launched = false;
-                        threatList[i].visible = false;
-
-                    }
-
-                }
-            }
-            //Check collision with missile
-            int collision = threatList.collisionWithRect(missileAABB);
-            if (collision != -1 && missileLaunched) //collosion between missile and threat
-            {
-                ResetMissile();
-                threatList[collision].visible = false;
-                threatList[collision].launched = false;
-                explosion.Play();
-            }
-
-            //check collision with cities
-            List<Rectangle> cityBounds = new List<Rectangle>(4);
-            cityBounds.Add(spriteCity1.bounds);
-            cityBounds.Add(spriteCity2.bounds);
-            cityBounds.Add(spriteCity3.bounds);
-            cityBounds.Add(spriteCity4.bounds);
-
-            foreach (Rectangle rectangle in cityBounds)
-            {
-                collision = threatList.collisionWithRect(rectangle);
-                if (collision != -1) //collosion between city and threat
-                {
-                    threatList[collision].visible = false;
-                    threatList[collision].launched = false;
-                    explosion.Play();
-                }
-            }
-
-
         }
 
-        private void DrawSplashScreen()
-        {
-            splashScreenBackGround.Draw(spriteBatch);
-        }
-
-        private void DrawLevel1()
-        {
-            level1BackGround.Draw(spriteBatch);
-            spriteCity1.Draw(spriteBatch);
-            spriteCity2.Draw(spriteBatch);
-            spriteCity3.Draw(spriteBatch);
-            spriteCity4.Draw(spriteBatch);
-            spriteMissile.Draw(spriteBatch);
-            spriteBatch.DrawString(font, "active: " + threatList.count(), new Vector2(50, 50), Color.White);
-            threatList.drawAll(spriteBatch);
-            if (showBoundingBox)
-            {
-                spriteMissile.drawInfo(spriteBatch, Color.White, Color.Black);
-                spriteMissile.drawRect4(spriteBatch, Color.Red);
-                threatList.drawInfo(spriteBatch, Color.White, Color.Red);
-                threatList.drawRect4(spriteBatch, Color.Blue);
-                spriteCity1.drawInfo(spriteBatch, Color.White, Color.Red);
-                spriteCity2.drawInfo(spriteBatch, Color.White, Color.Red);
-                spriteCity3.drawInfo(spriteBatch, Color.White, Color.Red);
-                spriteCity4.drawInfo(spriteBatch, Color.White, Color.Red);
-            }
-
-        }
-
-        private bool ThreatLaunched()
+        private bool ThreatLaunched(SpriteList threatList)
         {
             for (int i = 0; i < threatList.count(); i++)
             {
