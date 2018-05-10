@@ -169,10 +169,6 @@ namespace MissileDefence2.MacOS
             warningSoundPlayed = false;
             waveCounter = 0;
             gameScore = 0;
-            level1ThreatList = new SpriteList(LEVEL_1_THREAT_COUNT);
-            level2ThreatList = new SpriteList(LEVEL_2_THREAT_COUNT);
-            level3ThreatList = new SpriteList(LEVEL_3_THREAT_COUNT);
-            cityList = new SpriteList(NO_OF_CITIES);
 
             base.Initialize();
         }
@@ -222,80 +218,13 @@ namespace MissileDefence2.MacOS
             gameWin = new ImageBackground(textureGameWin, Color.White, GraphicsDevice);
             gameLose = new ImageBackground(textureGameLose, Color.White, GraphicsDevice);
 
-            //Create sprites from texture
+            //missile
             spriteMissile = new Sprite3(true, textureMissile, 380, 400);
             spriteMissile.setHSoffset(new Vector2(textureMissile.Width / 2, textureMissile.Height / 2));
             spriteMissile.setDisplayAngleRadians(MISSILE_DISPLAY_ANGLE);
             spriteMissile.setMoveAngleRadians(spriteMissile.getDisplayAngleRadians());
             spriteMissile.setMoveSpeed(MISSILE_SPEED);
 
-            //City 
-            spriteCity1 = new Sprite3(true, textureCity1, 30, 355);
-            spriteCity1.hitPoints = CITY_HIT_POINT;
-            spriteCity1.setBBToTexture();
-            spriteCity2 = new Sprite3(true, textureCity2, 195, 355);
-            spriteCity2.hitPoints = CITY_HIT_POINT;
-            spriteCity2.setBBToTexture();
-            spriteCity3 = new Sprite3(true, textureCity3, 475, 355);
-            spriteCity3.hitPoints = CITY_HIT_POINT;
-            spriteCity3.setBBToTexture();
-            spriteCity4 = new Sprite3(true, textureCity4, 651, 355);
-            spriteCity4.hitPoints = CITY_HIT_POINT;
-            spriteCity4.setBBToTexture();
-            cityList.addSprite(spriteCity1);
-            cityList.addSprite(spriteCity2);
-            cityList.addSprite(spriteCity3);
-            cityList.addSprite(spriteCity4);
-
-            //create threat sprites and load threatlists for all levels -- not very good but simpler to load all content in the begining
-            //Level1 threatlist
-            for (int i = 0; i < LEVEL_1_THREAT_COUNT; i++)
-            {
-                Sprite3 temp = new Sprite3(false, textureThreatBallon, 0, 0);
-                temp.launched = false;
-                temp.setHSoffset(new Vector2(0, textureThreatBallon.Height));
-                //temp.setDeltaSpeed(new Vector2(0, 1));
-                level1ThreatList.addSpriteReuse(temp);
-            }
-
-            //Level2 threatlist
-            spriteThreat1 = new Sprite3(false, textureThreat1, 0, 0);
-            spriteThreat1.setHSoffset(new Vector2(textureThreat1.Width / 2, textureThreat1.Height / 2));
-            spriteThreat1.setMoveSpeed(LEVEL2_SPEED);
-            spriteThreat1.launched = false;
-            spriteThreat2 = new Sprite3(false, textureThreat2, 0, 0);
-            spriteThreat2.setHSoffset(new Vector2(textureThreat2.Width / 2, textureThreat2.Height / 2));
-            spriteThreat2.setMoveSpeed(LEVEL2_SPEED);
-            spriteThreat2.launched = false;
-            spriteThreat3 = new Sprite3(false, textureThreat3, 0, 0);
-            spriteThreat3.setHSoffset(new Vector2(textureThreat3.Width / 2, textureThreat3.Height / 2));
-            spriteThreat3.setMoveSpeed(LEVEL2_SPEED);
-            spriteThreat3.launched = false;
-            level2ThreatList.addSprite(spriteThreat1);
-            level2ThreatList.addSprite(spriteThreat2);
-            level2ThreatList.addSprite(spriteThreat3);
-
-            //Level3 threatlist
-            Sprite3 temp1 = new Sprite3(false, textureThreat1, 0, 0);
-            temp1.setHSoffset(new Vector2(textureThreat1.Width / 2, textureThreat1.Height / 2));
-            temp1.setMoveSpeed(LEVEL3_SPEED);
-            temp1.launched = false;
-            Sprite3 temp2 = new Sprite3(false, textureThreat2, 0, 0);
-            temp2.setHSoffset(new Vector2(textureThreat2.Width / 2, textureThreat2.Height / 2));
-            temp2.setMoveSpeed(LEVEL3_SPEED);
-            temp2.launched = false;
-            Sprite3 temp3 = new Sprite3(false, textureThreat3, 0, 0);
-            temp3.setHSoffset(new Vector2(textureThreat3.Width / 2, textureThreat3.Height / 2));
-            temp3.setMoveSpeed(LEVEL3_SPEED);
-            temp3.launched = false;
-            Sprite3 temp4 = new Sprite3(false, textureThreat4, 0, 0);
-            temp4.setHSoffset(new Vector2(textureThreat4.Width / 2, textureThreat4.Height / 2));
-            temp4.setMoveSpeed(LEVEL3_SPEED);
-            temp4.launched = false;
-            level3ThreatList.addSprite(temp1);
-            level3ThreatList.addSprite(temp2);
-            level3ThreatList.addSprite(temp3);
-            level3ThreatList.addSprite(temp4);
 
 
             //Create font
@@ -430,8 +359,10 @@ namespace MissileDefence2.MacOS
         #region Splash Screen
         private void UpdateSplashScreen()
         {
-            if (currentKeyState.IsKeyDown(Keys.Enter))
+            if (prevKeyState.IsKeyUp(Keys.Enter) && currentKeyState.IsKeyDown(Keys.Enter))
             {
+                ResetMissile();
+                LoadGameComponents();
                 gameState = GameState.Level1;
             }
         }
@@ -538,6 +469,10 @@ namespace MissileDefence2.MacOS
             spriteBatch.DrawString(font, "WAVE: " + waveCounter, new Vector2(10, 10), Color.White);
             DrawScore();
             DrawCityHitPoint();
+            if(showBoundingBox)
+            {
+                DrawBoundingBoxAll(level1ThreatList);
+            }
         }
 
         private void ResetLevel1Threats()
@@ -560,7 +495,7 @@ namespace MissileDefence2.MacOS
         #region Level1Win
         private void UpdateLevel1Win()
         {
-            if (currentKeyState.IsKeyDown(Keys.Enter))
+            if (prevKeyState.IsKeyUp(Keys.Enter) && currentKeyState.IsKeyDown(Keys.Enter))
             {
                 gameState = GameState.Level2;
             }
@@ -673,16 +608,8 @@ namespace MissileDefence2.MacOS
             DrawCityHitPoint();
             if (showBoundingBox)
             {
-                spriteMissile.drawInfo(spriteBatch, Color.White, Color.Black);
-                spriteMissile.drawRect4(spriteBatch, Color.Red);
-                level2ThreatList.drawInfo(spriteBatch, Color.White, Color.Red);
-                level2ThreatList.drawRect4(spriteBatch, Color.Blue);
-                spriteCity1.drawInfo(spriteBatch, Color.White, Color.Red);
-                spriteCity2.drawInfo(spriteBatch, Color.White, Color.Red);
-                spriteCity3.drawInfo(spriteBatch, Color.White, Color.Red);
-                spriteCity4.drawInfo(spriteBatch, Color.White, Color.Red);
+                DrawBoundingBoxAll(level2ThreatList);
             }
-
         }
 
         public void ResetLevel2Threats()
@@ -705,7 +632,7 @@ namespace MissileDefence2.MacOS
         #region Level2Win
         private void UpdateLevel2Win()
         {
-            if (currentKeyState.IsKeyDown(Keys.Enter))
+            if (prevKeyState.IsKeyUp(Keys.Enter) && currentKeyState.IsKeyDown(Keys.Enter))
             {
                 gameState = GameState.Level3;
             }
@@ -818,14 +745,7 @@ namespace MissileDefence2.MacOS
             DrawCityHitPoint();
             if (showBoundingBox)
             {
-                spriteMissile.drawInfo(spriteBatch, Color.White, Color.Black);
-                spriteMissile.drawRect4(spriteBatch, Color.Red);
-                level3ThreatList.drawInfo(spriteBatch, Color.White, Color.Red);
-                level3ThreatList.drawRect4(spriteBatch, Color.Blue);
-                spriteCity1.drawInfo(spriteBatch, Color.White, Color.Red);
-                spriteCity2.drawInfo(spriteBatch, Color.White, Color.Red);
-                spriteCity3.drawInfo(spriteBatch, Color.White, Color.Red);
-                spriteCity4.drawInfo(spriteBatch, Color.White, Color.Red);
+                DrawBoundingBoxAll(level3ThreatList);
             }
         }
 
@@ -849,7 +769,10 @@ namespace MissileDefence2.MacOS
         #region GameWin
         private void UpdateGameWin()
         {
-
+            if (prevKeyState.IsKeyUp(Keys.Enter) && currentKeyState.IsKeyDown(Keys.Enter))
+            {
+                gameState = GameState.SplashScreen;
+            }
         }
 
         private void DrawGameWin()
@@ -862,7 +785,10 @@ namespace MissileDefence2.MacOS
         #region GameLose
         private void UpdateGameLose()
         {
-
+            if (prevKeyState.IsKeyUp(Keys.Enter) && currentKeyState.IsKeyDown(Keys.Enter))
+            {
+                gameState = GameState.SplashScreen;
+            }
         }
 
         private void DrawGameLose()
@@ -890,7 +816,7 @@ namespace MissileDefence2.MacOS
                 //spriteMissile.getBoundingBoxAA();
             }
 
-            if (currentKeyState.IsKeyDown(Keys.Up))
+            if (prevKeyState.IsKeyUp(Keys.Up) && currentKeyState.IsKeyDown(Keys.Up))
             {
                 missileLaunched = true;
             }
@@ -941,6 +867,114 @@ namespace MissileDefence2.MacOS
             }
         }
 
+        private void LoadGameComponents()
+        {
+            gameScore = 0;
+
+            //Initialize SpriteList
+            level1ThreatList = new SpriteList(LEVEL_1_THREAT_COUNT);
+            level2ThreatList = new SpriteList(LEVEL_2_THREAT_COUNT);
+            level3ThreatList = new SpriteList(LEVEL_3_THREAT_COUNT);
+            cityList = new SpriteList(NO_OF_CITIES);
+
+            //City 
+            spriteCity1 = new Sprite3(true, textureCity1, 30, 355);
+            spriteCity1.hitPoints = CITY_HIT_POINT;
+            spriteCity1.setBBToTexture();
+            spriteCity2 = new Sprite3(true, textureCity2, 195, 355);
+            spriteCity2.hitPoints = CITY_HIT_POINT;
+            spriteCity2.setBBToTexture();
+            spriteCity3 = new Sprite3(true, textureCity3, 475, 355);
+            spriteCity3.hitPoints = CITY_HIT_POINT;
+            spriteCity3.setBBToTexture();
+            spriteCity4 = new Sprite3(true, textureCity4, 651, 355);
+            spriteCity4.hitPoints = CITY_HIT_POINT;
+            spriteCity4.setBBToTexture();
+            cityList.addSprite(spriteCity1);
+            cityList.addSprite(spriteCity2);
+            cityList.addSprite(spriteCity3);
+            cityList.addSprite(spriteCity4);
+
+            //create threat sprites and load threatlists for all levels -- not very good but simpler to load all content in the begining
+            //Level1 threatlist
+            for (int i = 0; i < LEVEL_1_THREAT_COUNT; i++)
+            {
+                Sprite3 temp = new Sprite3(false, textureThreatBallon, 0, 0);
+                temp.launched = false;
+                temp.setHSoffset(new Vector2(0, textureThreatBallon.Height));
+                //temp.setDeltaSpeed(new Vector2(0, 1));
+                level1ThreatList.addSpriteReuse(temp);
+            }
+
+            //Level2 threatlist
+            spriteThreat1 = new Sprite3(false, textureThreat1, 0, 0);
+            spriteThreat1.setHSoffset(new Vector2(textureThreat1.Width / 2, textureThreat1.Height / 2));
+            spriteThreat1.setMoveSpeed(LEVEL2_SPEED);
+            spriteThreat1.launched = false;
+            spriteThreat2 = new Sprite3(false, textureThreat2, 0, 0);
+            spriteThreat2.setHSoffset(new Vector2(textureThreat2.Width / 2, textureThreat2.Height / 2));
+            spriteThreat2.setMoveSpeed(LEVEL2_SPEED);
+            spriteThreat2.launched = false;
+            spriteThreat3 = new Sprite3(false, textureThreat3, 0, 0);
+            spriteThreat3.setHSoffset(new Vector2(textureThreat3.Width / 2, textureThreat3.Height / 2));
+            spriteThreat3.setMoveSpeed(LEVEL2_SPEED);
+            spriteThreat3.launched = false;
+            level2ThreatList.addSprite(spriteThreat1);
+            level2ThreatList.addSprite(spriteThreat2);
+            level2ThreatList.addSprite(spriteThreat3);
+
+            //Level3 threatlist
+            Sprite3 temp1 = new Sprite3(false, textureThreat1, 0, 0);
+            temp1.setHSoffset(new Vector2(textureThreat1.Width / 2, textureThreat1.Height / 2));
+            temp1.setMoveSpeed(LEVEL3_SPEED);
+            temp1.launched = false;
+            Sprite3 temp2 = new Sprite3(false, textureThreat2, 0, 0);
+            temp2.setHSoffset(new Vector2(textureThreat2.Width / 2, textureThreat2.Height / 2));
+            temp2.setMoveSpeed(LEVEL3_SPEED);
+            temp2.launched = false;
+            Sprite3 temp3 = new Sprite3(false, textureThreat3, 0, 0);
+            temp3.setHSoffset(new Vector2(textureThreat3.Width / 2, textureThreat3.Height / 2));
+            temp3.setMoveSpeed(LEVEL3_SPEED);
+            temp3.launched = false;
+            Sprite3 temp4 = new Sprite3(false, textureThreat4, 0, 0);
+            temp4.setHSoffset(new Vector2(textureThreat4.Width / 2, textureThreat4.Height / 2));
+            temp4.setMoveSpeed(LEVEL3_SPEED);
+            temp4.launched = false;
+            level3ThreatList.addSprite(temp1);
+            level3ThreatList.addSprite(temp2);
+            level3ThreatList.addSprite(temp3);
+            level3ThreatList.addSprite(temp4);
+        }
+
+        private void DrawBoundingBoxAll(SpriteList threats) 
+        {
+            //Draw BB of missile
+            spriteMissile.getBoundingBoxAA();
+            spriteMissile.drawInfo(spriteBatch, Color.White, Color.Red);
+            spriteMissile.drawRect4(spriteBatch, Color.Blue);
+
+            //Draw BB of threatlist
+            for (int i = 0; i < threats.count(); i++)
+            {
+                if(threats[i].launched)
+                {
+                    threats[i].getBoundingBoxAA();
+                    threats[i].drawInfo(spriteBatch, Color.White, Color.Red);
+                    threats[i].drawRect4(spriteBatch, Color.Blue);
+                }
+            }
+
+            //Draw for cities
+            for (int i = 0; i < cityList.count(); i++)
+            {
+                if(cityList[i].active)
+                {
+                    cityList[i].getBoundingBoxAA();
+                    cityList[i].drawInfo(spriteBatch, Color.White, Color.Red);
+                    cityList[i].drawRect4(spriteBatch, Color.Blue);
+                }
+            }
+        }
         #endregion
     }
 }
