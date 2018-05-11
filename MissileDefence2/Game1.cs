@@ -97,6 +97,9 @@ namespace MissileDefence2.MacOS
         Texture2D textureCity3;
         Texture2D textureCity4;
 
+        //animations
+        Texture2D textureBoom;
+
         //Backgrounds
         ImageBackground splashScreenBackGround;
         ImageBackground level1BackGround;
@@ -126,12 +129,13 @@ namespace MissileDefence2.MacOS
         SpriteList level2ThreatList;
         SpriteList level3ThreatList;
         SpriteList cityList;
+        SpriteList booms;
 
         //font
         SpriteFont font;
 
         //Sounds
-        SoundEffect explosion;
+        SoundEffect explosionSound;
         SoundEffect alert;
 
         //Keyboard input
@@ -215,6 +219,8 @@ namespace MissileDefence2.MacOS
             texturePaused = Content.Load<Texture2D>("Images/Paused");
             textureInstruction = Content.Load<Texture2D>("Images/Instruction");
 
+            textureBoom = Content.Load<Texture2D>("Images/Explosion");
+
             //Create backgrounds from texture
             splashScreenBackGround = new ImageBackground(textureSplashScreen, Color.White, GraphicsDevice);
             level1BackGround = new ImageBackground(textureLevel1BackGround, Color.White, GraphicsDevice);
@@ -232,13 +238,13 @@ namespace MissileDefence2.MacOS
             spriteMissile.setMoveAngleRadians(spriteMissile.getDisplayAngleRadians());
             spriteMissile.setMoveSpeed(MISSILE_SPEED);
 
-
+            booms = new SpriteList();
 
             //Create font
             font = Content.Load<SpriteFont>("Fonts/Font");
 
             //Creat sound
-            explosion = Content.Load<SoundEffect>("Sounds/Explosion");
+            explosionSound = Content.Load<SoundEffect>("Sounds/Explosion");
             alert = Content.Load<SoundEffect>("Sounds/Alert");
         }
 
@@ -307,6 +313,7 @@ namespace MissileDefence2.MacOS
 
 
             }
+            booms.animationTick(gameTime);
             base.Update(gameTime);
         }
 
@@ -373,7 +380,6 @@ namespace MissileDefence2.MacOS
                     break;
 
             }
-
             spriteBatch.End();
 
             base.Draw(gameTime);
@@ -458,7 +464,8 @@ namespace MissileDefence2.MacOS
                     ResetMissile();
                     level1ThreatList[collision].visible = false;
                     level1ThreatList[collision].launched = false;
-                    explosion.Play();
+                    explosionSound.Play();
+                    CreateExplosion((int)level1ThreatList[collision].getPosX(), (int)level1ThreatList[collision].getPosY());
                     gameScore++;
                 }
 
@@ -479,7 +486,8 @@ namespace MissileDefence2.MacOS
                                 cityList[i].visible = false;
                                 cityList[i].active = false;
                             }
-                            explosion.Play();
+                            CreateExplosion((int)level1ThreatList[collision].getPosX(), (int)level1ThreatList[collision].getPosY());
+                            explosionSound.Play();
                         }
                     }
                 }
@@ -503,6 +511,7 @@ namespace MissileDefence2.MacOS
             spriteBatch.DrawString(font, "WAVE: " + waveCounter, new Vector2(10, 10), Color.White);
             DrawScore();
             DrawCityHitPoint();
+            booms.Draw(spriteBatch);
             if(showBoundingBox)
             {
                 DrawBoundingBoxAll(level1ThreatList);
@@ -601,7 +610,8 @@ namespace MissileDefence2.MacOS
                     ResetMissile();
                     level2ThreatList[collision].visible = false;
                     level2ThreatList[collision].launched = false;
-                    explosion.Play();
+                    explosionSound.Play();
+                    CreateExplosion((int)level2ThreatList[collision].getPosX(), (int)level2ThreatList[collision].getPosY());
                     gameScore++;
                 }
 
@@ -622,7 +632,8 @@ namespace MissileDefence2.MacOS
                                 cityList[i].visible = false;
                                 cityList[i].active = false;
                             }
-                            explosion.Play();
+                            CreateExplosion((int)level2ThreatList[collision].getPosX(), (int)level2ThreatList[collision].getPosY());
+                            explosionSound.Play();
                         }
                     }
                 }
@@ -646,6 +657,7 @@ namespace MissileDefence2.MacOS
             spriteBatch.DrawString(font, "WAVE: " + waveCounter, new Vector2(10, 10), Color.White);
             DrawScore();
             DrawCityHitPoint();
+            booms.Draw(spriteBatch);
             if (showBoundingBox)
             {
                 DrawBoundingBoxAll(level2ThreatList);
@@ -743,7 +755,8 @@ namespace MissileDefence2.MacOS
                     ResetMissile();
                     level3ThreatList[collision].visible = false;
                     level3ThreatList[collision].launched = false;
-                    explosion.Play();
+                    explosionSound.Play();
+                    CreateExplosion((int)level3ThreatList[collision].getPosX(), (int)level3ThreatList[collision].getPosY());
                     gameScore++;
                 }
 
@@ -764,7 +777,8 @@ namespace MissileDefence2.MacOS
                                 cityList[i].visible = false;
                                 cityList[i].active = false;
                             }
-                            explosion.Play();
+                            CreateExplosion((int)level3ThreatList[collision].getPosX(), (int)level3ThreatList[collision].getPosY());
+                            explosionSound.Play();
                         }
                     }
                 }
@@ -789,6 +803,7 @@ namespace MissileDefence2.MacOS
             spriteBatch.DrawString(font, "WAVE: " + waveCounter, new Vector2(10, 10), Color.White);
             DrawScore();
             DrawCityHitPoint();
+            booms.Draw(spriteBatch);
             if (showBoundingBox)
             {
                 DrawBoundingBoxAll(level3ThreatList);
@@ -951,7 +966,11 @@ namespace MissileDefence2.MacOS
             {
                 if(cityList[i].active) 
                 {
-                    spriteBatch.DrawString(font, "Life: " + cityList[i].hitPoints, new Vector2(cityList[i].getPos().X + 10, GraphicsDevice.Viewport.Height - 25), Color.White);
+                    spriteBatch.DrawString(font, "LIFE: " + cityList[i].hitPoints, new Vector2(cityList[i].getPos().X + 10, GraphicsDevice.Viewport.Height - 25), Color.White);
+                }
+                else 
+                {
+                    spriteBatch.DrawString(font, "CITY DESTROYED!", new Vector2(cityList[i].getPos().X + 10, GraphicsDevice.Viewport.Height - 25), Color.Red);
                 }
             }
         }
@@ -1064,6 +1083,61 @@ namespace MissileDefence2.MacOS
                 }
             }
         }
+
+        //Explosion
+
+        void CreateExplosion(int x, int y)
+        {
+            float scale = 0.6f;
+            int xoffset = -50;
+            int yoffset = -50;
+
+            Sprite3 s = new Sprite3(true, textureBoom, x + xoffset, y + yoffset);
+            s.setXframes(4);
+            s.setYframes(7);
+            s.setWidthHeight(888 / 4 * scale, 1554 / 7 * scale);
+
+            Vector2[] anim = new Vector2[28];
+            anim[0].X = 0; anim[0].Y = 0;
+            anim[1].X = 1; anim[1].Y = 0;
+            anim[2].X = 2; anim[2].Y = 0;
+            anim[3].X = 3; anim[3].Y = 0;
+            anim[4].X = 0; anim[4].Y = 1;
+            anim[5].X = 1; anim[5].Y = 1;
+            anim[6].X = 2; anim[6].Y = 1;
+            anim[7].X = 3; anim[7].Y = 1;
+            anim[8].X = 0; anim[8].Y = 2;
+            anim[9].X = 1; anim[9].Y = 2;
+            anim[10].X = 2; anim[10].Y = 2;
+            anim[11].X = 3; anim[11].Y = 2;
+            anim[12].X = 0; anim[12].Y = 3;
+            anim[13].X = 1; anim[13].Y = 3;
+            anim[14].X = 2; anim[14].Y = 3;
+            anim[15].X = 3; anim[15].Y = 3;
+            anim[16].X = 0; anim[16].Y = 4;
+            anim[17].X = 1; anim[17].Y = 4;
+            anim[18].X = 2; anim[18].Y = 4;
+            anim[19].X = 3; anim[19].Y = 4;
+            anim[20].X = 0; anim[20].Y = 5;
+            anim[21].X = 1; anim[20].Y = 5;
+            anim[22].X = 2; anim[20].Y = 5;
+            anim[23].X = 3; anim[20].Y = 5;
+            anim[24].X = 0; anim[20].Y = 6;
+            anim[25].X = 1; anim[20].Y = 6;
+            anim[26].X = 2; anim[20].Y = 6;
+            anim[27].X = 3; anim[20].Y = 6;
+            s.setAnimationSequence(anim, 0, 27, 4);
+            s.setAnimFinished(2); // make it inactive and invisible
+            s.animationStart();
+            Console.Write("animation started");
+
+            booms.addSpriteReuse(s); // add the sprite
+
+        }
+
+        //Endexplosion
+
+
         #endregion
     }
 }
